@@ -3,22 +3,34 @@ import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
 import PieChart from 'react-native-pie-chart';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../database/databaseConfig'; 
 import { getDoc, doc } from 'firebase/firestore'; 
-import AsyncStorage from '@react-native-async-storage/async-storage'; 
-import { onAuthStateChanged } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { onAuthStateChanged } from 'firebase/auth'; 
 
 const HomeScreen = () => {
-  const [calories, setCalories] = useState(0);
+  const [calories, setCalories] = useState('');
   const [username, setUsername] = useState(''); 
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null) 
 
   const widthAndHeight = 200;
   const series = [123, 321, 123, 789, 537];
   const sliceColor = ['#fbd203', '#ffb300', '#ff9100', '#ff6c00', '#ff3c00'];
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(FIREBASE_AUTH, async (user) => {  
-      console.log("User state changed:", user);
+    const unsubscribe = onAuthStateChanged(FIREBASE_AUTH, (currentUser) => {
+      if (currentUser) {
+        console.log('User logged in:', currentUser.uid);
+        setUser(currentUser);
+      } else {
+        console.log('No user logged in');
+        setUser(null);
+      }
+    });
 
+    return () => unsubscribe();
+  }, []);
+  
+  useEffect(() => {
       const fetchUsername = async () => {
         if (user) {
           try {
@@ -53,9 +65,40 @@ const HomeScreen = () => {
         }
       };
       fetchUsername();
-    });
-    return () => unsubscribe();
-  }, []);
+  }, [user]);
+
+  useEffect(() => {
+    const fetchCalories = async () => {
+      if (user) {
+        try {
+          const userRef = doc(FIRESTORE_DB, 'users', user.uid);
+          const userSnap = await getDoc(userRef);
+
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            setCalories(userData.dailyCalories);
+            await AsyncStorage.setItem('dailyCalories', userData.dailyCalories.toString());
+          } else {
+            setCalories(404);
+          }
+        } catch (error) {
+          console.error('Error fetching calories:', error);
+          setCalories(404);
+        }
+      } else {
+        const storedCalories = parseInt(await AsyncStorage.getItem('dailyCalories'), 10);
+        if (!isNaN(storedCalories)) {
+          setCalories(storedCalories);
+        } else {
+          setCalories(404);
+        }
+      }
+      setLoading(false);
+    };
+
+    fetchCalories();
+  }, [user]);
+  
   if (loading) {
     return (
       <View style={styles.container}>
@@ -87,7 +130,7 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
+    padding: 50,
   },
   title: {
     fontSize: 30,

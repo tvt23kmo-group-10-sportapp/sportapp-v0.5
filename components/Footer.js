@@ -26,14 +26,6 @@ const Footer = () => {
             <Icon name="home" size={24} color="#fff" />
             <Text style={styles.buttonText}>Home</Text>
           </Pressable>
-          <Pressable style={styles.button} onPress={() => navigation.navigate('Search')}>
-            <Icon name="magnify" size={24} color="#fff" />
-            <Text style={styles.buttonText}>Search</Text>
-          </Pressable>
-          <Pressable style={styles.button} onPress={() => navigation.navigate('Log')}>
-            <Icon name="note" size={24} color="#fff" />
-            <Text style={styles.buttonText}>Log</Text>
-          </Pressable>
           <Pressable style={styles.button} onPress={() => navigation.navigate('Settings')}>
             <Icon name="cog" size={24} color="#fff" />
             <Text style={styles.buttonText}>Settings</Text>

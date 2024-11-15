@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Modal, TouchableOpacity, StyleSheet } from 'react-native';
+import { addDoc } from 'firebase/firestore';
 
 const SettingsPage = () => {
   const [height, setHeight] = useState('');
